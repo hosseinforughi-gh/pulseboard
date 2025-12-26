@@ -56,7 +56,7 @@ export default function ProjectsPage() {
       },
 
       onSettled: () => {
-        qc.invalidateQueries({ queryKey: ["projects"] });
+        // qc.invalidateQueries({ queryKey: ["projects"] });
       },
     }
   );
