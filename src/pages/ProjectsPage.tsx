@@ -1,6 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useProjectsList } from "@/features/projects/useProjectsList";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 export default function ProjectsPage() {
   const {
@@ -58,32 +66,44 @@ export default function ProjectsPage() {
           </li>
         ))}
       </ul>
+      {totalFiltered > 0 && totalPages > 1 && (
+        <Pagination className="mt-4 flex justify-center">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={page === 1 ? undefined : () => goToPage(page - 1)}
+                aria-disabled={page === 1}
+                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </div>
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const pageNumber = index + 1;
+              return (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    isActive={pageNumber === page}
+                    onClick={() => goToPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => goToPage(page - 1)}
-            >
-              Prev
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === totalPages}
-              onClick={() => goToPage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+            <PaginationItem>
+              <PaginationNext
+                onClick={
+                  page === totalPages ? undefined : () => goToPage(page + 1)
+                }
+                aria-disabled={page === totalPages}
+                className={
+                  page === totalPages ? "pointer-events-none opacity-50" : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );

@@ -10,7 +10,7 @@ type TodoApi = {
 };
 
 export async function getProjects(): Promise<Project[]> {
-  const { data } = await http.get<TodoApi[]>("/todos?_limit=8");
+  const { data } = await http.get<TodoApi[]>("/todos?_limit=40");
   return data.map((t) => ({ id: t.id, title: t.title }));
 }
 
