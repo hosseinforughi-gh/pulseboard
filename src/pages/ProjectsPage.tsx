@@ -9,6 +9,10 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteProject } from "@/services/projects.services";
+import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
 
 export default function ProjectsPage() {
   const {
@@ -24,6 +28,16 @@ export default function ProjectsPage() {
     totalFiltered,
   } = useProjectsList();
 
+  const qc = useQueryClient();
+
+  const deleteMutation = useMutation<void, Error, number>({
+    mutationFn: (id: number) => deleteProject(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+  const deletingId = deleteMutation.variables as number | undefined;
+
   if (isLoading) return <div className="text-sm">Loading...</div>;
 
   if (isError)
@@ -37,7 +51,9 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Projects</h2>
-
+      <div className="mb-2">
+        <ProjectCreateForm />
+      </div>
       <input
         className="w-full rounded-md border px-3 py-2 text-sm"
         value={q}
@@ -61,8 +77,11 @@ export default function ProjectsPage() {
             >
               {p.title}
             </Link>
-
-            {/* اینجا delete/edit دکمه‌ها */}
+            <DeleteProjectButton
+              title={p.title}
+              isDeleting={deleteMutation.isPending && deletingId === p.id}
+              onConfirm={() => deleteMutation.mutate(p.id)}
+            />
           </li>
         ))}
       </ul>
