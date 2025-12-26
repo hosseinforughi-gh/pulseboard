@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteProject } from "@/services/projects.services";
 import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
 import type { Project } from "@/services/projects.services";
+import { toast } from "sonner";
 
 export default function ProjectsPage() {
   const {
@@ -36,30 +37,25 @@ export default function ProjectsPage() {
       mutationFn: (id) => deleteProject(id),
 
       onMutate: async (id) => {
-        // stop in-flight fetches
         await qc.cancelQueries({ queryKey: ["projects"] });
-
-        // snapshot
         const prev = qc.getQueryData<Project[]>(["projects"]);
-
-        // optimistic update: remove from list cache
         qc.setQueryData<Project[]>(["projects"], (old) =>
           (old ?? []).filter((p) => p.id !== id)
         );
-
-        // (اختیاری) کش جزئیات اون پروژه رو هم پاک کن تا اگه باز بود stale نشه
-        qc.removeQueries({ queryKey: ["projects", id] });
-
+        qc.removeQueries({ queryKey: ["projects", String(id)] });
         return { prev };
       },
 
       onError: (_err, _id, ctx) => {
-        // rollback
         if (ctx?.prev) qc.setQueryData(["projects"], ctx.prev);
+        toast.error("Delete failed. Please try again.");
+      },
+
+      onSuccess: () => {
+        toast.success("Project deleted.");
       },
 
       onSettled: () => {
-        // confirm with server
         qc.invalidateQueries({ queryKey: ["projects"] });
       },
     }
