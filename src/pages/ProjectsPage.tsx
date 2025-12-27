@@ -1,6 +1,9 @@
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useProjectsList } from "@/features/projects/useProjectsList";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { Button } from "@/components/ui/button";
+
 import {
   Pagination,
   PaginationContent,
@@ -8,59 +11,46 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
+
 import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteProject } from "@/services/projects.services";
 import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
-import type { Project } from "@/services/projects.services";
-import { toast } from "sonner";
+
+import { useProjectsList } from "@/features/projects/useProjectsList";
+import { projectsKeys } from "@/features/projects/projects.keys";
+import { deleteProject } from "@/services/projects.services";
 
 export default function ProjectsPage() {
   const {
-    items,
-    q,
-    setQuery,
+    data,
     isLoading,
+    isFetching,
     isError,
-    refetch,
+    error,
+    searchInput,
+    setSearchInput,
     page,
     totalPages,
-    goToPage,
-    totalFiltered,
+    paginationItems,
+    setPage,
+    refetch,
   } = useProjectsList();
+
+  const items = data?.items ?? [];
 
   const qc = useQueryClient();
 
-  const deleteMutation = useMutation<void, Error, number, { prev?: Project[] }>(
-    {
-      mutationFn: (id) => deleteProject(id),
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteProject(id),
 
-      onMutate: async (id) => {
-        await qc.cancelQueries({ queryKey: ["projects"] });
-        const prev = qc.getQueryData<Project[]>(["projects"]);
-        qc.setQueryData<Project[]>(["projects"], (old) =>
-          (old ?? []).filter((p) => p.id !== id)
-        );
-        qc.removeQueries({ queryKey: ["projects", String(id)] });
-        return { prev };
-      },
+    onSuccess: () => toast.success("Project deleted."),
+    onError: () => toast.error("Delete failed. Please try again."),
 
-      onError: (_err, _id, ctx) => {
-        if (ctx?.prev) qc.setQueryData(["projects"], ctx.prev);
-        toast.error("Delete failed. Please try again.");
-      },
-
-      onSuccess: () => {
-        toast.success("Project deleted.");
-      },
-
-      onSettled: () => {
-        // qc.invalidateQueries({ queryKey: ["projects"] });
-      },
-    }
-  );
-
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: projectsKeys.all, exact: false });
+    },
+  });
   const deletingId = deleteMutation.variables as number | undefined;
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
@@ -68,7 +58,9 @@ export default function ProjectsPage() {
   if (isError)
     return (
       <div className="space-y-3">
-        <div className="text-sm">Something went wrong.</div>
+        <div className="text-sm">
+          {error?.message ?? "Something went wrong."}
+        </div>
         <Button onClick={() => refetch()}>Retry</Button>
       </div>
     );
@@ -76,17 +68,23 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Projects</h2>
+
       <div className="mb-2">
         <ProjectCreateForm />
       </div>
-      <input
-        className="w-full rounded-md border px-3 py-2 text-sm"
-        value={q}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search projects..."
-      />
 
-      {totalFiltered === 0 && (
+      <div className="flex items-center gap-2">
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search projects..."
+        />
+        {isFetching && (
+          <span className="text-xs text-muted-foreground">Loading…</span>
+        )}
+      </div>
+
+      {items.length === 0 && (
         <div className="text-sm text-muted-foreground">No results.</div>
       )}
 
@@ -102,6 +100,7 @@ export default function ProjectsPage() {
             >
               {p.title}
             </Link>
+
             <DeleteProjectButton
               title={p.title}
               isDeleting={deleteMutation.isPending && deletingId === p.id}
@@ -110,35 +109,39 @@ export default function ProjectsPage() {
           </li>
         ))}
       </ul>
-      {totalFiltered > 0 && totalPages > 1 && (
+
+      {items.length > 0 && totalPages > 1 && (
         <Pagination className="mt-4 flex justify-center">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={page === 1 ? undefined : () => goToPage(page - 1)}
+                onClick={page === 1 ? undefined : () => setPage(page - 1)}
                 aria-disabled={page === 1}
                 className={page === 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
 
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const pageNumber = index + 1;
-              return (
-                <PaginationItem key={pageNumber}>
+            {paginationItems.map((it, idx) =>
+              it === "ellipsis" ? (
+                <PaginationItem key={`e-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={it}>
                   <PaginationLink
-                    isActive={pageNumber === page}
-                    onClick={() => goToPage(pageNumber)}
+                    isActive={it === page}
+                    onClick={() => setPage(it)}
                   >
-                    {pageNumber}
+                    {it}
                   </PaginationLink>
                 </PaginationItem>
-              );
-            })}
+              )
+            )}
 
             <PaginationItem>
               <PaginationNext
                 onClick={
-                  page === totalPages ? undefined : () => goToPage(page + 1)
+                  page === totalPages ? undefined : () => setPage(page + 1)
                 }
                 aria-disabled={page === totalPages}
                 className={

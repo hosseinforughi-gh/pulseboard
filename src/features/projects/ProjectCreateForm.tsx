@@ -1,76 +1,36 @@
 import { Button } from "@/components/ui/button";
-import { createProject, type Project } from "@/services/projects.services";
+import { createProject } from "@/services/projects.services";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-
-type Ctx = {
-  prev?: Project[];
-  tempId?: number;
-};
+import { projectsKeys } from "@/features/projects/projects.keys";
 
 const ProjectCreateForm = () => {
   const [title, setTitle] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
 
-  const { mutate, isPending } = useMutation<Project, Error, string, Ctx>({
-    mutationFn: (t) => createProject(t),
+  const { mutate, isPending } = useMutation({
+    mutationFn: (t: string) => createProject(t),
 
-    onMutate: async (t) => {
-      const trimmed = t.trim();
-      if (!trimmed) return {};
-
-      // 1) stop in-flight fetches
-      await qc.cancelQueries({ queryKey: ["projects"] });
-
-      // 2) snapshot
-      const prev = qc.getQueryData<Project[]>(["projects"]);
-
-      // 3) optimistic add
-      const tempId = Date.now();
-      const optimistic: Project = { id: tempId, title: trimmed };
-
-      qc.setQueryData<Project[]>(["projects"], (old) => [
-        optimistic,
-        ...(old ?? []),
-      ]);
-
-      // 4) reset UI input
+    onSuccess: () => {
+      toast.success("Project created.");
       setTitle("");
 
-      // 5) go to page 1 and clear filter so user SEE the new item
+      // برو صفحه 1 و سرچ رو پاک کن که کاربر ببینه
       const sp = new URLSearchParams(searchParams);
       sp.delete("q");
       sp.set("page", "1");
       setSearchParams(sp, { replace: true });
 
-      return { prev, tempId };
+      // مهم: همه لیست‌ها رو refresh کن
+      qc.invalidateQueries({ queryKey: projectsKeys.all, exact: false });
     },
 
-    onError: (_err, _title, ctx) => {
-      // rollback optimistic cache
-      if (ctx?.prev) qc.setQueryData(["projects"], ctx.prev);
+    onError: () => {
       toast.error("Create failed.");
     },
-
-    onSuccess: (created, _title, ctx) => {
-      // replace temp item with server item (id)
-      if (ctx?.tempId != null) {
-        qc.setQueryData<Project[]>(["projects"], (old) => {
-          const list = old ?? [];
-          return list.map((p) => (p.id === ctx.tempId ? created : p));
-        });
-      }
-      toast.success("Project created.");
-    },
-
-    // با jsonplaceholder بهتره invalidate نکنیم چون آیتم برمی‌پره/پایدار نیست
-    // اگر بعداً بک‌اند واقعی داشتی، اینو روشن کن:
-    // onSettled: () => {
-    //   qc.invalidateQueries({ queryKey: ["projects"] });
-    // },
   });
 
   return (

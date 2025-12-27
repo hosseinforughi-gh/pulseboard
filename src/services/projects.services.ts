@@ -9,9 +9,53 @@ type TodoApi = {
   title: string;
 };
 
-export async function getProjects(): Promise<Project[]> {
-  const { data } = await http.get<TodoApi[]>("/todos?_limit=40");
-  return data.map((t) => ({ id: t.id, title: t.title }));
+export type Paginated<T> = {
+  items: T[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+};
+
+export function getProjects(): Promise<Project[]>;
+export function getProjects(params: {
+  page: number;
+  limit: number;
+  q: string;
+}): Promise<Paginated<Project>>;
+
+export async function getProjects(params?: {
+  page: number;
+  limit: number;
+  q: string;
+}): Promise<Project[] | Paginated<Project>> {
+  if (!params) {
+    const { data } = await http.get<TodoApi[]>("/todos", {
+      params: { _limit: 40 },
+    });
+    return data.map((t) => ({ id: t.id, title: t.title }));
+  }
+  const { page, limit, q } = params;
+
+  const res = await http.get<TodoApi[]>("/todos", {
+    params: {
+      _page: page,
+      _limit: limit,
+      _sort: "id",
+      _order: "desc",
+      ...(q.trim() ? { q: q.trim() } : {}),
+    },
+  });
+  const items: Project[] = res.data.map((t) => ({ id: t.id, title: t.title }));
+  const totalHeader = res.headers?.["x-total-count"] as string | undefined;
+
+  const total =
+    totalHeader && !Number.isNaN(Number(totalHeader))
+      ? Number(totalHeader)
+      : items.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  return { items, total, totalPages, page, limit };
 }
 
 export async function getProject(id: number): Promise<Project> {
