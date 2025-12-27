@@ -1,26 +1,22 @@
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
-  PaginationPrevious,
   PaginationNext,
-  PaginationEllipsis,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
 import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
+import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
 
-import { useProjectsList } from "@/features/projects/useProjectsList";
-import { projectsKeys } from "@/features/projects/projects.keys";
-import { deleteProject } from "@/services/projects.services";
 import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMutation";
+import { useProjectsList } from "@/features/projects/useProjectsList";
 
 export default function ProjectsPage() {
   const {

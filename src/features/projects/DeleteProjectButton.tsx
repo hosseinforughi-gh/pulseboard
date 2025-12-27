@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
+  AlertDialogTrigger,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
 type Props = {
@@ -19,14 +19,14 @@ type Props = {
 
 export default function DeleteProjectButton({
   title,
-  isDeleting,
+  isDeleting = false,
   onConfirm,
 }: Props) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" disabled={isDeleting}>
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       </AlertDialogTrigger>
 
@@ -34,15 +34,20 @@ export default function DeleteProjectButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete project?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will delete <span className="font-medium">{title}</span>. This
-            action can’t be undone.
+            This will permanently delete{" "}
+            <span className="font-medium">{title}</span>. This action can’t be
+            undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={isDeleting}>
-            {isDeleting ? "Deleting..." : "Yes, delete"}
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
