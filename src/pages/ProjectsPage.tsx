@@ -20,6 +20,7 @@ import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
 import { useProjectsList } from "@/features/projects/useProjectsList";
 import { projectsKeys } from "@/features/projects/projects.keys";
 import { deleteProject } from "@/services/projects.services";
+import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMutation";
 
 export default function ProjectsPage() {
   const {
@@ -39,18 +40,7 @@ export default function ProjectsPage() {
 
   const items = data?.items ?? [];
 
-  const qc = useQueryClient();
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteProject(id),
-
-    onSuccess: () => toast.success("Project deleted."),
-    onError: () => toast.error("Delete failed. Please try again."),
-
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: projectsKeys.all, exact: false });
-    },
-  });
+  const deleteMutation = useDeleteProjectMutation();
   const deletingId = deleteMutation.variables as number | undefined;
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
