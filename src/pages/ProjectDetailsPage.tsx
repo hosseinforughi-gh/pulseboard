@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { projectsKeys } from "@/features/projects/projects.keys";
 import { useUpdateProjectMutation } from "@/features/projects/useUpdateProjectMutation";
+import { Input } from "@/components/ui/input";
 
 export default function ProjectDetailsPage() {
   const { id: idParam } = useParams();
@@ -61,13 +62,11 @@ export default function ProjectDetailsPage() {
         <div className="text-sm text-muted-foreground">Title</div>
 
         <div className="flex gap-2">
-          <input
-            className="w-full rounded-md border px-3 py-2 text-sm"
+          <Input
+            className="w-full"
             value={title}
             placeholder="Project title..."
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setTitle(e.target.value)
-            }
+            onChange={(e) => setTitle(e.target.value)}
           />
 
           <Button

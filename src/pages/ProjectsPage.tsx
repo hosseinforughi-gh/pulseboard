@@ -14,6 +14,7 @@ import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
 import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
 import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMutation";
 import { useProjectsList } from "@/features/projects/useProjectsList";
+import { Input } from "@/components/ui/input";
 
 export default function ProjectsPage() {
   const {
@@ -55,7 +56,8 @@ export default function ProjectsPage() {
       </div>
 
       <div className="flex items-center gap-2">
-        <input
+        <Input
+          className="max-w-sm"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search projects..."

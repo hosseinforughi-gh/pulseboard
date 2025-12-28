@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useCreateProjectMutation } from "@/features/projects/useCreateProjectMutation";
+import { Input } from "@/components/ui/input";
 
 const ProjectCreateForm = () => {
   const [title, setTitle] = useState("");
@@ -40,8 +41,8 @@ const ProjectCreateForm = () => {
         });
       }}
     >
-      <input
-        className="flex-1 rounded-md border px-3 py-2 text-sm"
+      <Input
+        className="flex-1"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="New project title..."
