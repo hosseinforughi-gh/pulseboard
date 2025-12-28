@@ -15,6 +15,7 @@ import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
 import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMutation";
 import { useProjectsList } from "@/features/projects/useProjectsList";
 import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
 
 export default function ProjectsPage() {
   const {
@@ -31,12 +32,14 @@ export default function ProjectsPage() {
     setPage,
     refetch,
   } = useProjectsList();
-  console.log(items.length, totalPages);
   const deleteMutation = useDeleteProjectMutation();
   const deletingId = deleteMutation.variables;
 
   const canPrev = page > 1 && !isFetching;
   const canNext = page < totalPages && !isFetching;
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
 
