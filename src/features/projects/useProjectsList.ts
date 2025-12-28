@@ -76,6 +76,22 @@ export function useProjectsList() {
   const items = query.data?.items ?? [];
   const totalPages = query.data?.totalPages ?? 1;
 
+  useEffect(() => {
+    if (page <= totalPages) return;
+
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+
+      sp.set("page", String(totalPages));
+      sp.set("limit", String(limit));
+
+      if (q) sp.set("q", q);
+      else sp.delete("q");
+
+      return sp;
+    });
+  }, [page, totalPages, limit, q, setSearchParams]);
+
   const paginationItems = useMemo(
     () => buildPagination(page, totalPages),
     [page, totalPages]

@@ -31,9 +31,12 @@ export default function ProjectsPage() {
     setPage,
     refetch,
   } = useProjectsList();
-
+  console.log(items.length, totalPages);
   const deleteMutation = useDeleteProjectMutation();
   const deletingId = deleteMutation.variables;
+
+  const canPrev = page > 1 && !isFetching;
+  const canNext = page < totalPages && !isFetching;
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
 
@@ -98,9 +101,9 @@ export default function ProjectsPage() {
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={page === 1 ? undefined : () => setPage(page - 1)}
-                aria-disabled={page === 1}
-                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                onClick={!canPrev ? undefined : () => setPage(page - 1)}
+                aria-disabled={!canPrev}
+                className={!canPrev ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
 
@@ -113,7 +116,11 @@ export default function ProjectsPage() {
                 <PaginationItem key={it}>
                   <PaginationLink
                     isActive={it === page}
-                    onClick={() => setPage(it)}
+                    onClick={isFetching ? undefined : () => setPage(it)}
+                    aria-disabled={isFetching}
+                    className={
+                      isFetching ? "pointer-events-none opacity-50" : ""
+                    }
                   >
                     {it}
                   </PaginationLink>
@@ -123,13 +130,9 @@ export default function ProjectsPage() {
 
             <PaginationItem>
               <PaginationNext
-                onClick={
-                  page === totalPages ? undefined : () => setPage(page + 1)
-                }
-                aria-disabled={page === totalPages}
-                className={
-                  page === totalPages ? "pointer-events-none opacity-50" : ""
-                }
+                onClick={!canNext ? undefined : () => setPage(page + 1)}
+                aria-disabled={!canNext}
+                className={!canNext ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
           </PaginationContent>
