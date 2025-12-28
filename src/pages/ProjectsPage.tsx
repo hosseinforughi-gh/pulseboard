@@ -16,6 +16,7 @@ import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMu
 import { useProjectsList } from "@/features/projects/useProjectsList";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectsPage() {
   const {
@@ -35,13 +36,14 @@ export default function ProjectsPage() {
   const deleteMutation = useDeleteProjectMutation();
   const deletingId = deleteMutation.variables;
 
+  const showSkeleton = isLoading;
+  const skeletonCount = 8;
+
   const canPrev = page > 1 && !isFetching;
   const canNext = page < totalPages && !isFetching;
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
-
-  if (isLoading) return <div className="text-sm">Loading...</div>;
 
   if (isError)
     return (
@@ -77,27 +79,50 @@ export default function ProjectsPage() {
         <div className="text-sm text-muted-foreground">No results.</div>
       )}
 
-      <ul className="space-y-2">
-        {items.map((p) => (
-          <li
-            key={p.id}
-            className="flex items-center justify-between gap-3 rounded-lg border p-3"
-          >
-            <Link
-              to={`/projects/${p.id}`}
-              className="min-w-0 flex-1 truncate hover:underline"
+      {showSkeleton ? (
+        <ul className="space-y-2">
+          {Array.from({ length: skeletonCount }).map((_, i) => (
+            <li
+              key={i}
+              className="flex items-center justify-between gap-3 rounded-lg border p-3"
             >
-              {p.title}
-            </Link>
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-9 w-20 rounded-md" />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <>
+          {items.length === 0 && (
+            <div className="text-sm text-muted-foreground">No results.</div>
+          )}
 
-            <DeleteProjectButton
-              title={p.title}
-              isDeleting={deleteMutation.isPending && deletingId === p.id}
-              onConfirm={() => deleteMutation.mutate(p.id)}
-            />
-          </li>
-        ))}
-      </ul>
+          <ul className={`space-y-2 ${isFetching ? "opacity-60" : ""}`}>
+            {items.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-lg border p-3"
+              >
+                <Link
+                  to={`/projects/${p.id}`}
+                  className="min-w-0 flex-1 truncate hover:underline"
+                >
+                  {p.title}
+                </Link>
+
+                <DeleteProjectButton
+                  title={p.title}
+                  isDeleting={deleteMutation.isPending && deletingId === p.id}
+                  onConfirm={() => deleteMutation.mutate(p.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {items.length > 0 && totalPages > 1 && (
         <Pagination className="mt-4 flex justify-center">
