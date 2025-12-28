@@ -16,7 +16,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { projectsKeys } from "@/features/projects/projects.keys";
 
 type UpdateCtx = {
-  prevProject?: Project;
+  prevProject: Project | undefined;
   prevLists: Array<[QueryKey, Paginated<Project> | undefined]>;
 };
 
@@ -33,44 +33,41 @@ export default function ProjectDetailsPage() {
   });
 
   const [title, setTitle] = useState("");
-
   useEffect(() => {
     setTitle(data?.title ?? "");
-  }, [data?.title]);
+  }, [data?.id, data?.title]);
 
   const updateMutation = useMutation<Project, Error, string, UpdateCtx>({
     mutationFn: (newTitle: string) => updateProject(id, newTitle),
 
     onMutate: async (newTitle) => {
       const nextTitle = newTitle.trim();
-      if (!nextTitle) return { prevLists: [] };
 
-      // cancel detail + all lists
+      // ✅ همیشه ctx کامل برگردون
+      if (!nextTitle) {
+        return { prevProject: undefined, prevLists: [] };
+      }
+
       await qc.cancelQueries({ queryKey: projectsKeys.detail(id) });
       await qc.cancelQueries({ queryKey: projectsKeys.lists() });
 
-      // snapshots
       const prevProject = qc.getQueryData<Project>(projectsKeys.detail(id));
       const prevLists = qc.getQueriesData<Paginated<Project>>({
         queryKey: projectsKeys.lists(),
       });
 
-      // optimistic detail update
       qc.setQueryData<Project>(projectsKeys.detail(id), (old) =>
         old ? { ...old, title: nextTitle } : old
       );
 
-      // optimistic update for ALL cached lists (all pages / q)
       for (const [key, data] of prevLists) {
         if (!data) continue;
 
-        const nextItems = data.items.map((p) =>
-          p.id === id ? { ...p, title: nextTitle } : p
-        );
-
         qc.setQueryData<Paginated<Project>>(key, {
           ...data,
-          items: nextItems,
+          items: data.items.map((p) =>
+            p.id === id ? { ...p, title: nextTitle } : p
+          ),
         });
       }
 
@@ -78,13 +75,15 @@ export default function ProjectDetailsPage() {
     },
 
     onError: (_err, _newTitle, ctx) => {
-      // rollback detail
-      if (ctx?.prevProject) {
-        qc.setQueryData<Project>(projectsKeys.detail(id), ctx.prevProject);
-      }
+      if (!ctx) return;
 
-      // rollback lists
-      for (const [key, data] of ctx?.prevLists ?? []) {
+      // ✅ حتی اگر undefined باشد rollback کن
+      qc.setQueryData<Project | undefined>(
+        projectsKeys.detail(id),
+        ctx.prevProject
+      );
+
+      for (const [key, data] of ctx.prevLists) {
         qc.setQueryData<Paginated<Project> | undefined>(key, data);
       }
     },
