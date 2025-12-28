@@ -1,5 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const RootLayout = () => {
   return (
@@ -11,6 +12,9 @@ const RootLayout = () => {
         <Link to="/projects">
           <Button variant="outline">Projects</Button>
         </Link>
+        <div className="ml-auto flex items-center gap-2">
+          <ModeToggle />
+        </div>
       </header>
       <Outlet />
     </div>
