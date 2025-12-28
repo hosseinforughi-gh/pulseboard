@@ -1,27 +1,12 @@
 import { Button } from "@/components/ui/button";
-import {
-  getProject,
-  updateProject,
-  type Paginated,
-  type Project,
-} from "@/services/projects.services";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryKey,
-} from "@tanstack/react-query";
+import { getProject } from "@/services/projects.services";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { projectsKeys } from "@/features/projects/projects.keys";
-
-type UpdateCtx = {
-  prevProject: Project | undefined;
-  prevLists: Array<[QueryKey, Paginated<Project> | undefined]>;
-};
+import { useUpdateProjectMutation } from "@/features/projects/useUpdateProjectMutation";
 
 export default function ProjectDetailsPage() {
-  const qc = useQueryClient();
   const { id: idParam } = useParams();
   const id = Number(idParam);
   const isValidId = Number.isFinite(id) && id > 0;
@@ -33,66 +18,12 @@ export default function ProjectDetailsPage() {
   });
 
   const [title, setTitle] = useState("");
+
   useEffect(() => {
     setTitle(data?.title ?? "");
   }, [data?.id, data?.title]);
 
-  const updateMutation = useMutation<Project, Error, string, UpdateCtx>({
-    mutationFn: (newTitle: string) => updateProject(id, newTitle),
-
-    onMutate: async (newTitle) => {
-      const nextTitle = newTitle.trim();
-
-      // ✅ همیشه ctx کامل برگردون
-      if (!nextTitle) {
-        return { prevProject: undefined, prevLists: [] };
-      }
-
-      await qc.cancelQueries({ queryKey: projectsKeys.detail(id) });
-      await qc.cancelQueries({ queryKey: projectsKeys.lists() });
-
-      const prevProject = qc.getQueryData<Project>(projectsKeys.detail(id));
-      const prevLists = qc.getQueriesData<Paginated<Project>>({
-        queryKey: projectsKeys.lists(),
-      });
-
-      qc.setQueryData<Project>(projectsKeys.detail(id), (old) =>
-        old ? { ...old, title: nextTitle } : old
-      );
-
-      for (const [key, data] of prevLists) {
-        if (!data) continue;
-
-        qc.setQueryData<Paginated<Project>>(key, {
-          ...data,
-          items: data.items.map((p) =>
-            p.id === id ? { ...p, title: nextTitle } : p
-          ),
-        });
-      }
-
-      return { prevProject, prevLists };
-    },
-
-    onError: (_err, _newTitle, ctx) => {
-      if (!ctx) return;
-
-      // ✅ حتی اگر undefined باشد rollback کن
-      qc.setQueryData<Project | undefined>(
-        projectsKeys.detail(id),
-        ctx.prevProject
-      );
-
-      for (const [key, data] of ctx.prevLists) {
-        qc.setQueryData<Paginated<Project> | undefined>(key, data);
-      }
-    },
-
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: projectsKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: projectsKeys.lists() });
-    },
-  });
+  const updateMutation = useUpdateProjectMutation(id);
 
   if (!isValidId) {
     return (
@@ -128,6 +59,7 @@ export default function ProjectDetailsPage() {
 
       <div className="space-y-2">
         <div className="text-sm text-muted-foreground">Title</div>
+
         <div className="flex gap-2">
           <input
             className="w-full rounded-md border px-3 py-2 text-sm"
@@ -137,6 +69,7 @@ export default function ProjectDetailsPage() {
               setTitle(e.target.value)
             }
           />
+
           <Button
             onClick={() => updateMutation.mutate(trimmed)}
             disabled={!trimmed || isUnchanged || updateMutation.isPending}

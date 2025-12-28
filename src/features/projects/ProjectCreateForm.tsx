@@ -37,6 +37,7 @@ const ProjectCreateForm = () => {
 
     onMutate: async (rawTitle) => {
       const nextTitle = rawTitle.trim();
+      if (!nextTitle) return { prevLists: [], tempId: -1 };
       const tempId = -Date.now(); // id موقت
 
       await qc.cancelQueries({ queryKey: projectsKeys.lists() });
