@@ -1,5 +1,16 @@
+export type ProjectsListParams = {
+  page: number;
+  limit: number;
+  q: string;
+};
+
 export const projectsKeys = {
   all: ["projects"] as const,
-  list: (params: { page: number; limit: number; q: string }) =>
-    [...projectsKeys.all, "list", params] as const,
+
+  lists: () => [...projectsKeys.all, "list"] as const,
+  list: (params: ProjectsListParams) =>
+    [...projectsKeys.lists(), params] as const,
+
+  details: () => [...projectsKeys.all, "detail"] as const,
+  detail: (id: number) => [...projectsKeys.details(), id] as const,
 };

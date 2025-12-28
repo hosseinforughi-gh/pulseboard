@@ -2,6 +2,7 @@ import {
   useMutation,
   useQueryClient,
   type QueryKey,
+  type UseMutationResult,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -15,17 +16,19 @@ type Ctx = {
   prev: Array<[QueryKey, Paginated<Project> | undefined]>;
 };
 
-export function useDeleteProjectMutation() {
+type DeleteProjectMutation = UseMutationResult<void, Error, number, Ctx>;
+
+export function useDeleteProjectMutation(): DeleteProjectMutation {
   const qc = useQueryClient();
 
   return useMutation<void, Error, number, Ctx>({
     mutationFn: (id) => deleteProject(id),
 
     onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: projectsKeys.all });
+      await qc.cancelQueries({ queryKey: projectsKeys.lists() });
 
       const prev = qc.getQueriesData<Paginated<Project>>({
-        queryKey: projectsKeys.all,
+        queryKey: projectsKeys.lists(),
       });
 
       for (const [key, data] of prev) {
@@ -50,7 +53,7 @@ export function useDeleteProjectMutation() {
 
     onError: (_err, _id, ctx) => {
       for (const [key, data] of ctx?.prev ?? []) {
-        qc.setQueryData(key, data);
+        qc.setQueryData<Paginated<Project> | undefined>(key, data);
       }
       toast.error("Delete failed. Please try again.");
     },
@@ -60,7 +63,7 @@ export function useDeleteProjectMutation() {
     },
 
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: projectsKeys.all, exact: false });
+      qc.invalidateQueries({ queryKey: projectsKeys.lists() });
     },
   });
 }

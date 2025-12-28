@@ -2,67 +2,109 @@ import { Button } from "@/components/ui/button";
 import {
   getProject,
   updateProject,
+  type Paginated,
   type Project,
 } from "@/services/projects.services";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { projectsKeys } from "@/features/projects/projects.keys";
+
+type UpdateCtx = {
+  prevProject?: Project;
+  prevLists: Array<[QueryKey, Paginated<Project> | undefined]>;
+};
 
 export default function ProjectDetailsPage() {
   const qc = useQueryClient();
   const { id: idParam } = useParams();
   const id = Number(idParam);
+  const isValidId = Number.isFinite(id) && id > 0;
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["projects", id],
+    queryKey: projectsKeys.detail(id),
     queryFn: () => getProject(id),
-    enabled: Number.isFinite(id),
+    enabled: isValidId,
   });
 
   const [title, setTitle] = useState("");
 
   useEffect(() => {
-    if (data?.title) setTitle(data.title);
+    setTitle(data?.title ?? "");
   }, [data?.title]);
-  const updateMutation = useMutation({
+
+  const updateMutation = useMutation<Project, Error, string, UpdateCtx>({
     mutationFn: (newTitle: string) => updateProject(id, newTitle),
 
-    // ✅ optimistic update
     onMutate: async (newTitle) => {
-      // جلوی رفرش همزمان رو بگیر
-      await qc.cancelQueries({ queryKey: ["projects", id] });
-      await qc.cancelQueries({ queryKey: ["projects"] });
+      const nextTitle = newTitle.trim();
+      if (!nextTitle) return { prevLists: [] };
 
-      // snapshot برای rollback
-      const prevProject = qc.getQueryData<Project>(["projects", id]);
-      const prevList = qc.getQueryData<Project[]>(["projects"]);
+      // cancel detail + all lists
+      await qc.cancelQueries({ queryKey: projectsKeys.detail(id) });
+      await qc.cancelQueries({ queryKey: projectsKeys.lists() });
 
-      // update فوری جزئیات
-      qc.setQueryData<Project>(["projects", id], (old) =>
-        old ? { ...old, title: newTitle } : old
+      // snapshots
+      const prevProject = qc.getQueryData<Project>(projectsKeys.detail(id));
+      const prevLists = qc.getQueriesData<Paginated<Project>>({
+        queryKey: projectsKeys.lists(),
+      });
+
+      // optimistic detail update
+      qc.setQueryData<Project>(projectsKeys.detail(id), (old) =>
+        old ? { ...old, title: nextTitle } : old
       );
 
-      // update فوری لیست
-      qc.setQueryData<Project[]>(["projects"], (old) =>
-        old?.map((p) => (p.id === id ? { ...p, title: newTitle } : p))
-      );
+      // optimistic update for ALL cached lists (all pages / q)
+      for (const [key, data] of prevLists) {
+        if (!data) continue;
 
-      return { prevProject, prevList };
+        const nextItems = data.items.map((p) =>
+          p.id === id ? { ...p, title: nextTitle } : p
+        );
+
+        qc.setQueryData<Paginated<Project>>(key, {
+          ...data,
+          items: nextItems,
+        });
+      }
+
+      return { prevProject, prevLists };
     },
 
-    // اگر خطا شد rollback
     onError: (_err, _newTitle, ctx) => {
-      if (ctx?.prevProject) qc.setQueryData(["projects", id], ctx.prevProject);
-      if (ctx?.prevList) qc.setQueryData(["projects"], ctx.prevList);
+      // rollback detail
+      if (ctx?.prevProject) {
+        qc.setQueryData<Project>(projectsKeys.detail(id), ctx.prevProject);
+      }
+
+      // rollback lists
+      for (const [key, data] of ctx?.prevLists ?? []) {
+        qc.setQueryData<Paginated<Project> | undefined>(key, data);
+      }
     },
 
-    // بعد از اتمام، sync با سرور
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["projects", id] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: projectsKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: projectsKeys.lists() });
     },
   });
+
+  if (!isValidId) {
+    return (
+      <div className="space-y-3">
+        <div className="text-sm">Invalid project id.</div>
+        <Link className="text-sm underline" to="/projects">
+          Back
+        </Link>
+      </div>
+    );
+  }
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
 

@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-
 import { Button } from "@/components/ui/button";
-
 import {
   Pagination,
   PaginationContent,
@@ -14,13 +12,12 @@ import {
 
 import DeleteProjectButton from "@/features/projects/DeleteProjectButton";
 import ProjectCreateForm from "@/features/projects/ProjectCreateForm";
-
 import { useDeleteProjectMutation } from "@/features/projects/useDeleteProjectMutation";
 import { useProjectsList } from "@/features/projects/useProjectsList";
 
 export default function ProjectsPage() {
   const {
-    data,
+    items,
     isLoading,
     isFetching,
     isError,
@@ -34,10 +31,8 @@ export default function ProjectsPage() {
     refetch,
   } = useProjectsList();
 
-  const items = data?.items ?? [];
-
   const deleteMutation = useDeleteProjectMutation();
-  const deletingId = deleteMutation.variables as number | undefined;
+  const deletingId = deleteMutation.variables;
 
   if (isLoading) return <div className="text-sm">Loading...</div>;
 
