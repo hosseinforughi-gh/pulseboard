@@ -1,45 +1,65 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/auth.store";
-import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
 
 const HomePage = () => {
-  const { user, isAuthenticated, login, logout } = useAuthStore();
-
-  const qc = useQueryClient();
-
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = (location.state as any)?.from?.pathname as string | undefined;
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Home</h2>
-      {isAuthenticated ? (
-        <div className="space-y-3">
-          <div className="text-sm">Welcome, {user?.name}</div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              logout();
-              qc.removeQueries({ queryKey: ["projects"] });
-              navigate("/", { replace: true });
-            }}
-          >
-            Logout
-          </Button>
-        </div>
-      ) : (
-        <Button
-          onClick={() => {
-            login({ id: "1", name: "Hossein" });
-            navigate(from ?? "/projects", { replace: true });
-          }}
-        >
-          Login (Mock)
-        </Button>
-      )}
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">PulseBoard</h1>
+        <p className="text-muted-foreground">
+          A tiny project dashboard to practice React Query, Zustand, routing,
+          and polished UI with shadcn.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>What you can do</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Browse projects with pagination and search</li>
+              <li>Create with optimistic UI updates</li>
+              <li>Edit project title with inline save</li>
+              <li>Delete with confirmation dialog</li>
+              <li>Protected routes + persisted auth</li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Link to="/projects">
+              <Button className="w-full">Open Projects</Button>
+            </Link>
+
+            {!isAuthenticated && (
+              <p className="text-xs text-muted-foreground">
+                Tip: use the <span className="font-medium">Login</span> button
+                in the header to access protected pages.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tech stack</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          React + TypeScript • React Router • TanStack Query • Zustand •
+          Tailwind • shadcn/ui
+        </CardContent>
+      </Card>
     </div>
   );
 };
