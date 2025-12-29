@@ -33,6 +33,7 @@ export default function ProjectsPage() {
     setPage,
     refetch,
   } = useProjectsList();
+
   const deleteMutation = useDeleteProjectMutation();
   const deletingId = deleteMutation.variables;
 
@@ -41,11 +42,15 @@ export default function ProjectsPage() {
 
   const canPrev = page > 1 && !isFetching;
   const canNext = page < totalPages && !isFetching;
+
+  // فقط وقتی داده واقعی داریم و خالیه پیام بده
+  const showEmptyState = !showSkeleton && !isError && items.length === 0;
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  if (isError)
+  if (isError) {
     return (
       <div className="space-y-3">
         <div className="text-sm">
@@ -54,6 +59,7 @@ export default function ProjectsPage() {
         <Button onClick={() => refetch()}>Retry</Button>
       </div>
     );
+  }
 
   return (
     <div className="space-y-3">
@@ -75,7 +81,7 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {items.length === 0 && (
+      {showEmptyState && (
         <div className="text-sm text-muted-foreground">No results.</div>
       )}
 
@@ -95,33 +101,27 @@ export default function ProjectsPage() {
           ))}
         </ul>
       ) : (
-        <>
-          {items.length === 0 && (
-            <div className="text-sm text-muted-foreground">No results.</div>
-          )}
-
-          <ul className={`space-y-2 ${isFetching ? "opacity-60" : ""}`}>
-            {items.map((p) => (
-              <li
-                key={p.id}
-                className="flex items-center justify-between gap-3 rounded-lg border p-3"
+        <ul className={`space-y-2 ${isFetching ? "opacity-60" : ""}`}>
+          {items.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-center justify-between gap-3 rounded-lg border p-3"
+            >
+              <Link
+                to={`/projects/${p.id}`}
+                className="min-w-0 flex-1 truncate hover:underline"
               >
-                <Link
-                  to={`/projects/${p.id}`}
-                  className="min-w-0 flex-1 truncate hover:underline"
-                >
-                  {p.title}
-                </Link>
+                {p.title}
+              </Link>
 
-                <DeleteProjectButton
-                  title={p.title}
-                  isDeleting={deleteMutation.isPending && deletingId === p.id}
-                  onConfirm={() => deleteMutation.mutate(p.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
+              <DeleteProjectButton
+                title={p.title}
+                isDeleting={deleteMutation.isPending && deletingId === p.id}
+                onConfirm={() => deleteMutation.mutate(p.id)}
+              />
+            </li>
+          ))}
+        </ul>
       )}
 
       {items.length > 0 && totalPages > 1 && (
