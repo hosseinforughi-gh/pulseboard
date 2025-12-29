@@ -1,9 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth.store";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const { user, isAuthenticated, login, logout } = useAuthStore();
+
+  const qc = useQueryClient();
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,6 +23,7 @@ const HomePage = () => {
             variant="outline"
             onClick={() => {
               logout();
+              qc.removeQueries({ queryKey: ["projects"] });
               navigate("/", { replace: true });
             }}
           >
