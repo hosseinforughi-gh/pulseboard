@@ -2,15 +2,15 @@ import { Button } from "@/components/ui/button";
 import { getProject } from "@/services/projects.services";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import { projectsKeys } from "@/features/projects/projects.keys";
 import { useUpdateProjectMutation } from "@/features/projects/useUpdateProjectMutation";
 import { Input } from "@/components/ui/input";
 
 export default function ProjectDetailsPage() {
   const { id: idParam } = useParams();
-  const id = Number(idParam);
-  const isValidId = Number.isFinite(id) && id > 0;
+  const id = idParam ?? "";
+  const isValidId = id.length > 0;
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: projectsKeys.detail(id),

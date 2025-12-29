@@ -16,12 +16,12 @@ type Ctx = {
   prev: Array<[QueryKey, Paginated<Project> | undefined]>;
 };
 
-type DeleteProjectMutation = UseMutationResult<void, Error, number, Ctx>;
+type DeleteProjectMutation = UseMutationResult<void, Error, string, Ctx>;
 
 export function useDeleteProjectMutation(): DeleteProjectMutation {
   const qc = useQueryClient();
 
-  return useMutation<void, Error, number, Ctx>({
+  return useMutation<void, Error, string, Ctx>({
     mutationFn: (id) => deleteProject(id),
 
     onMutate: async (id) => {

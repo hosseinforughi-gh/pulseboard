@@ -23,7 +23,7 @@ type UpdateProjectMutation = UseMutationResult<
   UpdateCtx
 >;
 
-export function useUpdateProjectMutation(id: number): UpdateProjectMutation {
+export function useUpdateProjectMutation(id: string): UpdateProjectMutation {
   const qc = useQueryClient();
 
   return useMutation<Project, Error, string, UpdateCtx>({

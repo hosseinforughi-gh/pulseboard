@@ -13,7 +13,7 @@ import { projectsKeys } from "./projects.keys";
 
 type CreateCtx = {
   prevLists: Array<[QueryKey, Paginated<Project> | undefined]>;
-  tempId: number;
+  tempId: string;
 };
 
 type CreateProjectMutation = UseMutationResult<
@@ -38,7 +38,7 @@ export function useCreateProjectMutation(): CreateProjectMutation {
 
     onMutate: async (rawTitle) => {
       const nextTitle = rawTitle.trim();
-      const tempId = -Date.now(); // id موقت
+      const tempId = `temp-${Date.now()}`; // id موقت
 
       await qc.cancelQueries({ queryKey: projectsKeys.lists() });
 

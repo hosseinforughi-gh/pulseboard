@@ -12,5 +12,5 @@ export const projectsKeys = {
     [...projectsKeys.lists(), params] as const,
 
   details: () => [...projectsKeys.all, "detail"] as const,
-  detail: (id: number) => [...projectsKeys.details(), id] as const,
+  detail: (id: string) => [...projectsKeys.details(), id] as const,
 };
