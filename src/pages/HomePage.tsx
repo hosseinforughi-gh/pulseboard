@@ -1,11 +1,7 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuthStore } from "@/stores/auth.store";
+import RecentProjectsCard from "@/features/projects/RecentProjectsCard";
 
 const HomePage = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -32,23 +28,7 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick actions</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <Link to="/projects">
-              <Button className="w-full">Open Projects</Button>
-            </Link>
-
-            {!isAuthenticated && (
-              <p className="text-xs text-muted-foreground">
-                Tip: use the <span className="font-medium">Login</span> button
-                in the header to access protected pages.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <RecentProjectsCard />
       </div>
 
       <Card>
