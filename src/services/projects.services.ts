@@ -8,6 +8,7 @@ export type Project = {
 type TodoApi = {
   id: string | number;
   title: string;
+  completed?: boolean;
 };
 
 export type Paginated<T> = {
@@ -18,25 +19,30 @@ export type Paginated<T> = {
   limit: number;
 };
 
-export function getProjects(): Promise<Project[]>;
-export function getProjects(params: {
+function mapTodoToProject(t: TodoApi): Project {
+  return { id: String(t.id), title: t.title };
+}
+
+/**
+ * Used for places like "RecentProjects" or anywhere you want a simple list (non-paginated).
+ */
+export async function getProjectsAll(limit = 40): Promise<Project[]> {
+  const { data } = await http.get<TodoApi[]>("/todos", {
+    params: { _limit: limit },
+  });
+
+  return (data ?? []).map(mapTodoToProject);
+}
+
+/**
+ * Main paginated list endpoint (supports search via `q`).
+ * Works well with json-server (reads x-total-count header).
+ */
+export async function getProjectsPage(params: {
   page: number;
   limit: number;
   q: string;
-}): Promise<Paginated<Project>>;
-
-export async function getProjects(params?: {
-  page: number;
-  limit: number;
-  q: string;
-}): Promise<Project[] | Paginated<Project>> {
-  if (!params) {
-    const { data } = await http.get<TodoApi[]>("/todos", {
-      params: { _limit: 40 },
-    });
-    return data.map((t) => ({ id: String(t.id), title: t.title }));
-  }
-
+}): Promise<Paginated<Project>> {
   const { page, limit, q } = params;
 
   const res = await http.get<TodoApi[]>("/todos", {
@@ -49,15 +55,14 @@ export async function getProjects(params?: {
     },
   });
 
-  const items: Project[] = res.data.map((t) => ({
-    id: String(t.id),
-    title: t.title,
-  }));
+  const items: Project[] = (res.data ?? []).map(mapTodoToProject);
 
-  const totalHeader = res.headers?.["x-total-count"] as string | undefined;
+  // axios typically normalizes headers to lowercase
+  const totalHeader = (res.headers?.["x-total-count"] ??
+    res.headers?.["X-Total-Count"]) as string | undefined;
 
   const total =
-    totalHeader && !Number.isNaN(Number(totalHeader))
+    totalHeader && Number.isFinite(Number(totalHeader))
       ? Number(totalHeader)
       : items.length;
 
@@ -68,7 +73,7 @@ export async function getProjects(params?: {
 
 export async function getProject(id: string): Promise<Project> {
   const { data } = await http.get<TodoApi>(`/todos/${id}`);
-  return { id: String(data.id), title: data.title };
+  return mapTodoToProject(data);
 }
 
 export async function createProject(title: string): Promise<Project> {
@@ -76,7 +81,7 @@ export async function createProject(title: string): Promise<Project> {
     title,
     completed: false,
   });
-  return { id: String(data.id), title: data.title };
+  return mapTodoToProject(data);
 }
 
 export async function deleteProject(id: string): Promise<void> {
@@ -88,5 +93,5 @@ export async function updateProject(
   title: string
 ): Promise<Project> {
   const { data } = await http.patch<TodoApi>(`/todos/${id}`, { title });
-  return { id: String(data.id), title: data.title };
+  return mapTodoToProject(data);
 }

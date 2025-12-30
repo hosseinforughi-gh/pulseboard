@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-  getProjects,
-  type Paginated,
-  type Project,
-} from "@/services/projects.services";
+import { getProjectsPage } from "@/services/projects.services";
+
 import { projectsKeys } from "./projects.keys";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
@@ -53,22 +50,24 @@ export function useProjectsList() {
     const nextQ = debouncedSearch.trim();
     if (nextQ === q) return;
 
-    setSearchParams((prev) => {
-      const sp = new URLSearchParams(prev);
+    setSearchParams(
+      (prev) => {
+        const sp = new URLSearchParams(prev);
 
-      if (nextQ) sp.set("q", nextQ);
-      else sp.delete("q");
+        if (nextQ) sp.set("q", nextQ);
+        else sp.delete("q");
 
-      sp.set("page", "1");
-      sp.set("limit", String(limit));
-      return sp;
-    });
+        sp.set("page", "1");
+        sp.set("limit", String(limit));
+        return sp;
+      },
+      { replace: true }
+    );
   }, [debouncedSearch, q, limit, setSearchParams]);
 
   const query = useQuery({
     queryKey: projectsKeys.list({ page, limit, q }),
-    queryFn: () =>
-      getProjects({ page, limit, q }) as Promise<Paginated<Project>>,
+    queryFn: () => getProjectsPage({ page, limit, q }),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
@@ -79,17 +78,20 @@ export function useProjectsList() {
   useEffect(() => {
     if (page <= totalPages) return;
 
-    setSearchParams((prev) => {
-      const sp = new URLSearchParams(prev);
+    setSearchParams(
+      (prev) => {
+        const sp = new URLSearchParams(prev);
 
-      sp.set("page", String(totalPages));
-      sp.set("limit", String(limit));
+        sp.set("page", String(totalPages));
+        sp.set("limit", String(limit));
 
-      if (q) sp.set("q", q);
-      else sp.delete("q");
+        if (q) sp.set("q", q);
+        else sp.delete("q");
 
-      return sp;
-    });
+        return sp;
+      },
+      { replace: true }
+    );
   }, [page, totalPages, limit, q, setSearchParams]);
 
   const paginationItems = useMemo(
@@ -98,17 +100,21 @@ export function useProjectsList() {
   );
 
   function setPage(nextPage: number) {
-    // اگر خواستی می‌تونیم clamp هم بکنیم
-    setSearchParams((prev) => {
-      const sp = new URLSearchParams(prev);
-      sp.set("page", String(nextPage));
-      sp.set("limit", String(limit));
+    const safe = Math.max(1, Math.min(totalPages, Math.floor(nextPage)));
+    if (safe === page) return;
+    setSearchParams(
+      (prev) => {
+        const sp = new URLSearchParams(prev);
+        sp.set("page", String(nextPage));
+        sp.set("limit", String(limit));
 
-      if (q) sp.set("q", q);
-      else sp.delete("q");
+        if (q) sp.set("q", q);
+        else sp.delete("q");
 
-      return sp;
-    });
+        return sp;
+      },
+      { replace: true }
+    );
   }
 
   return {

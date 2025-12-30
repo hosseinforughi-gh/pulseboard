@@ -1,11 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  getProjects,
-  type Paginated,
-  type Project,
-} from "@/services/projects.services";
+import { getProjectsPage } from "@/services/projects.services";
 import { projectsKeys } from "@/features/projects/projects.keys";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,14 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function RecentProjectsCard() {
   const params = { page: 1, limit: 3, q: "" };
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery<
-    Paginated<Project>
-  >({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: projectsKeys.list(params),
-    queryFn: async () => {
-      // به خاطر overload، اینجا نوع خروجی رو Paginated<Project> در نظر می‌گیریم
-      return (await getProjects(params)) as Paginated<Project>;
-    },
+    queryFn: () => getProjectsPage(params),
   });
 
   return (
