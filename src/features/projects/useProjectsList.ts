@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { getProjectsPage } from "@/services/projects.services";
 
 import { projectsKeys } from "./projects.keys";
@@ -30,6 +34,7 @@ function buildPagination(current: number, total: number): PaginationItem[] {
 
 export function useProjectsList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const qc = useQueryClient();
 
   const page = toInt(searchParams.get("page"), 1);
   const limit = toInt(searchParams.get("limit"), 8);
@@ -75,6 +80,29 @@ export function useProjectsList() {
   const items = query.data?.items ?? [];
   const totalPages = query.data?.totalPages ?? 1;
   const total = query.data?.total ?? 0;
+
+  useEffect(() => {
+    if (!query.data) return;
+
+    const nextPage = page + 1;
+    const prevPage = page - 1;
+
+    if (nextPage <= totalPages) {
+      qc.prefetchQuery({
+        queryKey: projectsKeys.list({ page: nextPage, limit, q }),
+        queryFn: () => getProjectsPage({ page: nextPage, limit, q }),
+        staleTime: 30_000,
+      });
+    }
+
+    if (prevPage >= 1) {
+      qc.prefetchQuery({
+        queryKey: projectsKeys.list({ page: prevPage, limit, q }),
+        queryFn: () => getProjectsPage({ page: prevPage, limit, q }),
+        staleTime: 30_000,
+      });
+    }
+  }, [page, totalPages, limit, q, qc, query.data]);
 
   useEffect(() => {
     if (query.isLoading || query.isFetching) return;
