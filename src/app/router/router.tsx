@@ -6,6 +6,7 @@ import ProjectDetailsPage from "@/pages/ProjectDetailsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import RouteErrorPage from "@/pages/RouteErrorPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import LoginPage from "@/pages/LoginPage";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/login", element: <LoginPage /> },
       {
         element: <ProtectedRoute />,
         children: [

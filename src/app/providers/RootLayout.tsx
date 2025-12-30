@@ -1,14 +1,13 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
 
 const RootLayout = () => {
-  const { user, isAuthenticated, login, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const location = useLocation();
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -31,6 +30,7 @@ const RootLayout = () => {
                 variant="outline"
                 onClick={() => {
                   logout();
+                  qc.cancelQueries({ queryKey: ["projects"] });
                   qc.removeQueries({ queryKey: ["projects"] });
                   navigate("/", { replace: true });
                 }}
@@ -39,21 +39,7 @@ const RootLayout = () => {
               </Button>
             </>
           ) : (
-            <Button
-              onClick={() => {
-                // اگر وسط یه مسیر protected بود، بعد لاگین برگرده همونجا
-                login({ id: "1", name: "Hossein" });
-
-                const from = (location.state as any)?.from;
-                const redirectTo = from?.pathname
-                  ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`
-                  : "/projects";
-
-                navigate(redirectTo, { replace: true });
-              }}
-            >
-              Login
-            </Button>
+            <Button onClick={() => navigate("/login")}>Login</Button>
           )}
 
           <ModeToggle />
