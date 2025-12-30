@@ -43,12 +43,13 @@ const RootLayout = () => {
               onClick={() => {
                 // اگر وسط یه مسیر protected بود، بعد لاگین برگرده همونجا
                 login({ id: "1", name: "Hossein" });
-                navigate(
-                  (location.state as any)?.from?.pathname ?? "/projects",
-                  {
-                    replace: true,
-                  }
-                );
+
+                const from = (location.state as any)?.from;
+                const redirectTo = from?.pathname
+                  ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`
+                  : "/projects";
+
+                navigate(redirectTo, { replace: true });
               }}
             >
               Login
