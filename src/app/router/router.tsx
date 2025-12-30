@@ -5,6 +5,7 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectDetailsPage from "@/pages/ProjectDetailsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import RouteErrorPage from "@/pages/RouteErrorPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
           { path: "/projects/:id", element: <ProjectDetailsPage /> },
         ],
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);
