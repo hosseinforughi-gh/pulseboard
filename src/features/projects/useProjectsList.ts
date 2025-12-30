@@ -74,6 +74,35 @@ export function useProjectsList() {
 
   const items = query.data?.items ?? [];
   const totalPages = query.data?.totalPages ?? 1;
+  const total = query.data?.total ?? 0;
+
+  useEffect(() => {
+    if (query.isLoading || query.isFetching) return;
+    if (total === 0) return;
+
+    if (items.length === 0 && page > 1) {
+      setSearchParams(
+        (prev) => {
+          const sp = new URLSearchParams(prev);
+          sp.set("page", String(page - 1));
+          sp.set("limit", String(limit));
+          if (q) sp.set("q", q);
+          else sp.delete("q");
+          return sp;
+        },
+        { replace: true }
+      );
+    }
+  }, [
+    items.length,
+    page,
+    limit,
+    q,
+    total,
+    query.isLoading,
+    query.isFetching,
+    setSearchParams,
+  ]);
 
   useEffect(() => {
     if (page <= totalPages) return;
@@ -105,7 +134,7 @@ export function useProjectsList() {
     setSearchParams(
       (prev) => {
         const sp = new URLSearchParams(prev);
-        sp.set("page", String(nextPage));
+        sp.set("page", String(safe));
         sp.set("limit", String(limit));
 
         if (q) sp.set("q", q);
