@@ -4,8 +4,9 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+type FromLocation = { pathname: string; search?: string; hash?: string };
 type LocationState = {
-  from?: Location;
+  from?: FromLocation;
 };
 
 export default function LoginPage() {
@@ -13,11 +14,10 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as LocationState | null)?.from;
-  const redirectTo = (from as any)?.pathname
-    ? `${(from as any).pathname}${(from as any).search ?? ""}${
-        (from as any).hash ?? ""
-      }`
+  const state = location.state as LocationState | null;
+  const from = state?.from;
+  const redirectTo = from
+    ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`
     : "/projects";
 
   return (
@@ -35,7 +35,7 @@ export default function LoginPage() {
           <Button
             className="w-full"
             onClick={() => {
-              login({ id: "1", name: "Hossein" });
+              login({ id: "1", name: "Demo User" });
               toast.success("Logged in");
               navigate(redirectTo, { replace: true });
             }}

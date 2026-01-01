@@ -24,9 +24,9 @@ type CreateProjectMutation = UseMutationResult<
 >;
 
 function hasNoQ(key: QueryKey) {
-  // key شکلش: ["projects","list", {page, limit, q}]
-  const params = key?.[2] as { q?: string } | undefined;
-  const q = (params?.q ?? "").trim();
+  const params = key?.[2];
+  if (!params || typeof params !== "object") return true;
+  const q = String((params as any).q ?? "").trim();
   return !q;
 }
 
@@ -34,11 +34,21 @@ export function useCreateProjectMutation(): CreateProjectMutation {
   const qc = useQueryClient();
 
   return useMutation<Project, Error, string, CreateCtx>({
-    mutationFn: (t: string) => createProject(t),
+    mutationFn: (t: string) => {
+      const title = t.trim();
+      if (!title) return Promise.reject(new Error("Title is required"));
+      return createProject(title);
+    },
 
     onMutate: async (rawTitle) => {
       const nextTitle = rawTitle.trim();
       const tempId = `temp-${Date.now()}`; // id موقت
+
+      const tempProject: Project = {
+        id: tempId,
+        title: nextTitle,
+        createdAt: new Date().toISOString(),
+      };
 
       await qc.cancelQueries({ queryKey: projectsKeys.lists() });
 
@@ -52,14 +62,20 @@ export function useCreateProjectMutation(): CreateProjectMutation {
           if (!data) continue;
           if (!hasNoQ(key)) continue;
 
-          const params = key[2] as { page?: number; limit: number; q: string };
-          if ((params?.page ?? data.page) !== 1) continue;
+          const params = (key[2] ?? {}) as {
+            page?: number;
+            limit?: number;
+            q?: string;
+          };
+          const page = params.page ?? data.page;
+          if (page !== 1) continue;
 
-          const nextItems = [{ id: tempId, title: nextTitle }, ...data.items];
-          const trimmedItems = nextItems.slice(0, data.limit);
+          const limit = params.limit ?? data.limit;
+          const nextItems = [tempProject, ...data.items];
+          const trimmedItems = nextItems.slice(0, limit);
 
           const nextTotal = data.total + 1;
-          const nextTotalPages = Math.max(1, Math.ceil(nextTotal / data.limit));
+          const nextTotalPages = Math.max(1, Math.ceil(nextTotal / limit));
 
           qc.setQueryData<Paginated<Project>>(key, {
             ...data,
@@ -81,7 +97,6 @@ export function useCreateProjectMutation(): CreateProjectMutation {
     },
 
     onSuccess: (created, _title, ctx) => {
-      // tempId رو با آیتم واقعی جایگزین کن
       const lists = qc.getQueriesData<Paginated<Project>>({
         queryKey: projectsKeys.lists(),
       });
@@ -90,12 +105,19 @@ export function useCreateProjectMutation(): CreateProjectMutation {
         if (!data) continue;
         if (!hasNoQ(key)) continue;
 
-        const params = key[2] as { page?: number; limit: number; q: string };
-        if ((params?.page ?? data.page) !== 1) continue;
+        const params = (key[2] ?? {}) as {
+          page?: number;
+          limit?: number;
+          q?: string;
+        };
+        const page = params.page ?? data.page;
+        if (page !== 1) continue;
 
-        const nextItems = data.items.map((p) =>
-          p.id === ctx?.tempId ? created : p
-        );
+        const idx = data.items.findIndex((p) => p.id === ctx?.tempId);
+        if (idx === -1) continue;
+
+        const nextItems = [...data.items];
+        nextItems[idx] = created;
 
         qc.setQueryData<Paginated<Project>>(key, {
           ...data,

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
+import { projectsKeys } from "@/features/projects/projects.keys";
 
 const RootLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -30,8 +31,8 @@ const RootLayout = () => {
                 variant="outline"
                 onClick={() => {
                   logout();
-                  qc.cancelQueries({ queryKey: ["projects"] });
-                  qc.removeQueries({ queryKey: ["projects"] });
+                  qc.cancelQueries({ queryKey: projectsKeys.all });
+                  qc.removeQueries({ queryKey: projectsKeys.all });
                   navigate("/", { replace: true });
                 }}
               >
