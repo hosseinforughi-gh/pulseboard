@@ -1,54 +1,28 @@
 {
   "todos": [
-    {
-      "id": 1,
-      "title": "PulseBoard UI polish + layout cleanup",
-      "createdAt": "2025-12-20T09:10:00.000Z"
-    },
-    {
-      "id": 2,
-      "title": "Auth redirect (return to intended page after login)",
-      "createdAt": "2025-12-21T12:30:00.000Z"
-    },
-    {
-      "id": 3,
-      "title": "React Query queryKeys refactor (projectsKeys)",
-      "createdAt": "2025-12-23T08:05:00.000Z"
-    },
-    {
-      "id": 4,
-      "title": "Optimistic create with temp id + rollback",
-      "createdAt": "2025-12-24T18:40:00.000Z"
-    },
-    {
-      "id": 5,
-      "title": "Pagination with shadcn/ui + URL sync",
-      "createdAt": "2025-12-26T14:15:00.000Z"
-    },
-    {
-      "id": 6,
-      "title": "Search + debounce + query params (q/page)",
-      "createdAt": "2025-12-27T10:20:00.000Z"
-    },
-    {
-      "id": 7,
-      "title": "Delete confirmation dialog (AlertDialog)",
-      "createdAt": "2025-12-28T16:00:00.000Z"
-    },
-    {
-      "id": 8,
-      "title": "Fix delete UX on last page (auto back one page)",
-      "createdAt": "2025-12-29T11:45:00.000Z"
-    },
-    {
-      "id": 9,
-      "title": "Recent projects sorting by createdAt",
-      "createdAt": "2025-12-30T09:35:00.000Z"
-    },
-    {
-      "id": 10,
-      "title": "Loading/empty/error states + skeleton improvements",
-      "createdAt": "2025-12-31T13:25:00.000Z"
-    }
+    { "id": 1, "title": "PulseBoard: project setup (Vite + TS + Tailwind)", "createdAt": "2025-12-20T09:10:00.000Z" },
+    { "id": 2, "title": "Add shadcn/ui + theme toggle", "createdAt": "2025-12-21T12:05:00.000Z" },
+    { "id": 3, "title": "Router: add protected routes + 404 page", "createdAt": "2025-12-22T18:40:00.000Z" },
+    { "id": 4, "title": "Auth store (Zustand): demo login/logout", "createdAt": "2025-12-23T10:30:00.000Z" },
+    { "id": 5, "title": "Projects service layer (axios instance + mapping)", "createdAt": "2025-12-23T20:15:00.000Z" },
+    { "id": 6, "title": "Projects list UI (cards + empty state)", "createdAt": "2025-12-24T11:00:00.000Z" },
+    { "id": 7, "title": "Add create project form + optimistic create", "createdAt": "2025-12-24T17:20:00.000Z" },
+    { "id": 8, "title": "Implement delete project mutation + confirmation dialog", "createdAt": "2025-12-25T09:45:00.000Z" },
+    { "id": 9, "title": "Add search input to Projects page", "createdAt": "2025-12-25T14:30:00.000Z" },
+    { "id": 10, "title": "Debounce search + sync query params (q)", "createdAt": "2025-12-26T08:10:00.000Z" },
+    { "id": 11, "title": "Pagination (page param) + skeleton loading", "createdAt": "2025-12-26T13:05:00.000Z" },
+    { "id": 12, "title": "Replace prev/next with shadcn Pagination component", "createdAt": "2025-12-27T10:25:00.000Z" },
+    { "id": 13, "title": "Refactor: extract list logic into useProjectsList hook", "createdAt": "2025-12-28T16:45:00.000Z" },
+    { "id": 14, "title": "Prefetch next page in React Query", "createdAt": "2025-12-29T09:20:00.000Z" },
+    { "id": 15, "title": "Fix: deleting last item on page should go back one page", "createdAt": "2025-12-30T19:10:00.000Z" },
+    { "id": 16, "title": "Recent projects: sort by createdAt (not id string)", "createdAt": "2025-12-31T11:55:00.000Z" },
+    { "id": 17, "title": "Improve toasts + disable buttons while pending", "createdAt": "2026-01-01T08:35:00.000Z" },
+    { "id": 18, "title": "Add screenshots to README", "createdAt": "2026-01-01T15:05:00.000Z" },
+    { "id": 19, "title": "API: add json-server app under apps/api", "createdAt": "2026-01-02T09:00:00.000Z" },
+    { "id": 20, "title": "Deploy API on Render + wire Vercel env var", "createdAt": "2026-01-02T13:45:00.000Z" },
+    { "id": 21, "title": "Add vercel.json rewrite for SPA routing", "createdAt": "2026-01-02T18:25:00.000Z" },
+    { "id": 22, "title": "Docs: update README with deploy links", "createdAt": "2026-01-03T09:15:00.000Z" },
+    { "id": 23, "title": "Polish: consistent empty states + better copy", "createdAt": "2026-01-03T11:40:00.000Z" },
+    { "id": 24, "title": "Next: write tutorial notes for useProjectsList", "createdAt": "2026-01-03T16:10:00.000Z" }
   ]
 }
