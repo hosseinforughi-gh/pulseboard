@@ -2,6 +2,13 @@
 
 A tiny project dashboard to practice React Query, Zustand, routing, and a polished UI with shadcn/ui.
 
+## Live
+
+- App (Vercel): https://hf-pulseboard.vercel.app
+- API (Render / json-server): https://pulseboard-api.onrender.com
+
+> Note: Render free instances can “sleep”, so the first request may take a few seconds.
+
 ## Screenshots
 
 ### Projects list + pagination
@@ -39,6 +46,7 @@ A tiny project dashboard to practice React Query, Zustand, routing, and a polish
 - Zustand
 - TailwindCSS + shadcn/ui
 - Sonner (toasts)
+- json-server (API)
 
 ## Run locally
 
